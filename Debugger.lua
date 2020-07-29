@@ -1,4 +1,4 @@
-Debugger = Class("Debugger")
+Debugger = require("30log")("Debugger")
 
 function Debugger:init(params)
 	self.active = params.isActive or false
