@@ -4,8 +4,8 @@ function Debugger:init(params)
 	self.active = params.isActive or false
 	self.names = {}
 	self.listeners = {}
-    self.results = {}
-    self.panes = params.panes or {}
+	self.results = {}
+	self.panes = params.panes or {}
 
 	self.x = params.x
 	self.y = params.y
