@@ -26,8 +26,8 @@ function Debugger:init(params)
 	self.textCursorPosition = 0
 
 	self.printer = params.customPrinter or false
-	self.printColor = params.customColor or {0.25, 0.25, 0.25, 0.5}
-	self.printFont = params.customFont or love.graphics.getFont()
+	self.printColor = params.printColor or {0.25, 0.25, 0.25, 0.5}
+	self.printFont = params.printFont or love.graphics.getFont()
 
 	self.debugToggle = params.debugToggle or '`'
 
