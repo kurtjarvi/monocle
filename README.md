@@ -2,7 +2,7 @@
 
 ### Debugging Love2D with style
 
-Monocle is a way to easily watch things while you play your game. 
+Monocle reborn is an easier way to watch things while you play your game. 
 It's easy to implement, and easy to understand. The setup of a basic main.lua file is as follows:
 
 ```lua
