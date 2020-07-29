@@ -31,3 +31,26 @@ end
 Easy as that! When the game is run, what you're watching will show up in the top right of the screen.
 
 For more information on how to use the old Monocle, as well as the official Love2D forum post, look [here](http://love2d.org/forums/viewtopic.php?f=5&t=77108).
+
+Oh, you can watch string, number and table variables. so if you have a variable player.health that you really want to watch,
+```lua
+monocle:watch("Health", function() return player.health end)
+```
+is fine.
+
+
+ You can also pass in certain parameters when you load Monocle. Here's a list of them, with their default values:
+ 
+ ```lua
+ Monocle{       -- ALL of these parameters are optional!
+	isActive = true,          -- Whether the debugger is initially active
+	customPrinter = false,    -- Whether Monocle prints status messages to the output
+	printColor = {51, 51, 51},-- Color to print with
+	printFont = love.graphics.getFont(),
+	debugToggle = '`',        -- The keyboard button for toggling Monocle
+	filesToWatch = {
+		'main.lua'
+	}, -- Files that, when edited, cause the game to reload automatically,
+	x, y, r, sx, sy, ox, oy, kx, ky
+}
+```
