@@ -17,15 +17,11 @@ function love.update(dt)
 end
 
 function love.draw()
-	monocle:render()
+	monocle:draw()
 end
 
-function love.textinput(t)
-	monocle:textinput(t)
-end
-
-function love.keypressed(text)
-	monocle:keypressed(text)
+function love.keypressed(key)
+	monocle:keypressed(key)
 end
 ```
 Easy as that! When the game is run, what you're watching will show up in the top right of the screen.
@@ -95,6 +91,7 @@ monocle = Debugger{
 function love.load()
 	-- The most basic way to watch any expression or variable:
 	monocle:watch("FPS", function() return love.timer.getFPS() end)
+	monocle:activate()
 	love.graphics.setBackgroundColor(1, 0.8, 0)
 end
 
@@ -104,16 +101,12 @@ end
 
 function love.draw()
 	monocle:drawPanes("fill")
-	monocle:render()
+	monocle:draw()
 end
 
-function love.textinput(t)
-	monocle:textinput(t)
-end
-
-function love.keypressed(text)
-	monocle:keypressed(text)
+function love.keypressed(key)
+	monocle:keypressed(key)
 end
 ```
 The above code would look like this:
-![Panes drawn with gold background](/Annotation 2020-07-31 135931.png)
+![Panes drawn with gold background](/panes_drawn.png)
