@@ -4,9 +4,10 @@ function Debugger:init(params)
 	self.active = params.isActive or false
 	self.names = {}
 	self.listeners = {}
-	self.results = {}
-	self.panes = params.panes or {}
-
+    self.results = {}
+    self.panes = {}
+    self.panesData = {}
+    
 	self.x = params.x
 	self.y = params.y
 	self.r = params.r
@@ -15,10 +16,20 @@ function Debugger:init(params)
 	self.ox = params.ox
 	self.oy = params.oy
 	self.kx = params.kx
-	self.ky = params.ky
-
-	self.printqueue = {}
-
+    self.ky = params.ky
+    
+    local defaultPaneData = {
+        id = "default",
+        x = self.x,
+        y = self.y,
+        w = WINDOW_WIDTH - self.x * 2,
+        h = WINDOW_HEIGHT - self.y * 2
+    }    
+    table.insert(self.panesData, defaultPaneData)
+    self.panesData['default'] = defaultPaneData
+    
+    self.printqueue = {}
+    
 	self.commands = {}
 	self.cmdresults = {}
 
@@ -34,10 +45,26 @@ function Debugger:init(params)
 	self.watchedFiles = params.filesToWatch or {}
 	self.watchedFileTimes = {}
 	for i, v in ipairs(self.watchedFiles) do
-		assert(love.filesystem.getLastModified(v),v .. ' must not exist or is in the wrong directory.')
+		assert(love.filesystem.getLastModified(v), v .. ' must not exist or is in the wrong directory.')
 		self.watchedFileTimes[i] = love.filesystem.getLastModified(v)
 	end
 	self.print('Debugger Initialized.')
+end
+
+function Debugger:cleanupPanes()
+    local li = 1
+    local r = {}
+    for i, pane in ipairs(self.panesData) do
+        if li ~= 1 then
+            if pane.id == self.panesData[li].id then
+                table.insert(r, li)
+            end
+            li = pane.id
+        end
+    end
+    for _, i in ipairs(r) do
+        table.remove(self.panesData, i)
+    end
 end
 
 function Debugger:keypressed(key)
@@ -53,9 +80,94 @@ function Debugger:keypressed(key)
 			-- Clear self.text.
 			self.text = ''
 		elseif key == 'backspace' then
-			self.text = string.sub(self.text,1,string.len(self.text)-1)
+			self.text = string.sub(self.text, 1, string.len(self.text) - 1)
 		end
 	end
+end
+
+function Debugger:addPane(id, x, y, w, h)
+    local data = {
+        id = id,
+        x = x,
+        y = y,
+        w = w,
+        h = h
+    }
+    table.insert(self.panesData, data)
+    self.panesData[id] = data
+end
+
+function Debugger:drawPanes(mode)
+    for _, pane in ipairs(self.panesData) do
+        love.graphics.setNewFont(20)
+        local x, y, w, h = pane.x, pane.y, pane.w or pane.width, pane.h or pane.height
+        local text = pane.id
+        love.graphics.setColor(1, 1, 1, 0.25)
+        love.graphics.rectangle(mode, x, y, w, h)
+        local textW = love.graphics.getFont():getWidth(text)
+        local textH = love.graphics.getFont():getHeight()
+        local textX, textY
+        if x < WINDOW_WIDTH / 2 then
+            textX = x
+        else
+            textX = (x + w) - textW
+        end
+        if y < WINDOW_HEIGHT / 2 then
+            textY = y
+        else
+            textY = (y + h) - textH
+        end
+        love.graphics.setColor(1, 1, 1, 0.65)
+        love.graphics.rectangle("fill", textX, textY, textW, textH)
+        love.graphics.setColor(0, 0, 0, 1)
+        love.graphics.print(text, textX, textY)
+        love.graphics.setColor(1, 1, 1, 1)
+    end
+end
+
+function Debugger:watch(name, object, pane)
+    if type(object) == 'string' then
+        object = load(object)
+    end
+    if type(object) == 'function' then
+        self:print('Watching ' .. name)
+        if pane then
+            local d, i = any(self.names, name)
+            local count = 0
+            for _, paneData in ipairs(self.panesData) do
+                if paneData.id ~= pane then
+                    count = count + 1
+                end
+            end
+            assert(count ~= #self.panesData, "Invalid pane specified")
+        else
+            pane = "default"
+        end
+        if d then
+            self.listeners[i] = object
+            self.names[i] = name
+            self.panes[i] = pane
+        else
+            table.insert(self.listeners, object)
+            table.insert(self.names, name)
+            table.insert(self.panes, pane)
+        end
+    else
+        self:print('Object to watch is not a string')
+        error('Object to watch is not a string')
+    end
+end
+
+function Debugger:unwatch(name)
+    for i, v in ipairs(self.names) do
+        if v == name then
+            self.names[i] = nil
+            self.listeners[i] = nil
+            self.panes[i] = nil
+        end
+    end
+    self.listeners[name] = nil
+    self.results = {}
 end
 
 function Debugger:setFactors(x, y, r, sx, sy, ox, oy, kx, ky)
@@ -85,6 +197,7 @@ function Debugger:print(text,justtext)
 end
 
 function Debugger:update(dt)
+    self:cleanupPanes()
 	for key, object in ipairs(self.listeners) do
 		if type(object) == 'function' then
 			self.results[key] = object() or 'Error!'
@@ -112,98 +225,87 @@ local function any(t, k)
     return false
 end
 
-function Debugger:watch(name, object)
-	if type(object) == 'string' then
-		object = load(object)
-	end
-	if type(object) == 'function' then
-        self:print('Watching ' .. name)
-        local d, i = any(self.names, name)
-        if d then
-            self.listeners[i] = object
-            self.names[i] = name
-        else
-            table.insert(self.listeners, object)
-            table.insert(self.names, name)
-        end
-	else
-		self:print('Object to watch is not a string')
-		error('Object to watch is not a string')
-	end
-end
-
-function Debugger:unwatch(name)
-	for i, v in ipairs(self.names) do
-		if v == name then
-			self.names[i] = nil
-			self.listeners[i] = nil
-		end
-	end
-	self.listeners[name] = nil
-	self.results = {}
-end
-
 function Debugger:render()
-	if self.active then
-		love.graphics.setColor(self.printColor)
-		love.graphics.setFont(self.printFont)
-		local draw_x, draw_y = self.x or 10, self.y or 0
-		local title_text = self.text
-		love.graphics.print(title_text, draw_x, draw_y)
-		love.graphics.rectangle("line", draw_x, draw_y - 1,
-			self.printFont:getWidth(title_text),
-			self.printFont:getHeight() + 2
-		)
-		for name, result in pairs(self.results) do
-			if type(result) == 'number' or type(result) == 'string' then
-				if type(result) == 'string' and result == '' then
-					result = 'nil'
-				elseif type(result) == 'boolean' then
-					result = tostring(result)
-				elseif (type(result) == 'userdata') or (type(result) == 'function') then
-					result = type(result)
-				end
-				love.graphics.print(self.names[name] .. " : " .. result, draw_x, (draw_y + 1) * self.printFont:getHeight(),
-					self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
-			elseif type(result) == 'table' then
-				love.graphics.print(self.names[name] .. " : Table:", draw_x, (draw_y + 1) * self.printFont:getHeight(),
-					self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
-				draw_y = draw_y + 1
-				for i, v in pairs(result) do
-					if type(v) == 'table' then
-						love.graphics.print("\t" .. i .. " : " .. "Table:", draw_x, (draw_y + 1) * self.printFont:getHeight(),
-							self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
-						for i, v in pairs(v) do
-							if type(v) == "table" then
-								v = "table"
-							elseif type(v) == 'boolean' then
-								v = tostring(v)
-							elseif type(v) == 'string' and v == '' then
-								v = 'nil'
-							elseif (type(v) == 'userdata') or (type(v) == 'function') then
-								v = type(v)
-							end
-							draw_y = draw_y + 1
-							love.graphics.print("\t\t" .. i .. " : " .. v, draw_x, (draw_y + 1) * self.printFont:getHeight(),
-								self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
-						end
-					else
-						if type(v) == 'string' and v == '' then
-							v = 'nil'
-						elseif type(v) == 'boolean' then
-							v = tostring(v)
-						elseif (type(v) == 'userdata') or (type(v) == 'function') then
-							v = type(v)
-						end
-						love.graphics.print("\t" .. i .. " : " .. v, draw_x, (draw_y + 1) * self.printFont:getHeight(),
-							self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
-					end
-					draw_y = draw_y + 1
-				end
-			end
-			draw_y = draw_y + 1
-		end	-- For name,result
-	end -- self.active
+    self:drawPanes("fill")
+    if self.active then
+        for _, pane in ipairs(self.panes) do
+                self:display(pane)
+        end
+    end
+end
+
+function Debugger:display(pane)
+    if type(pane) == 'string' then
+        pane = self.panesData[pane]
+    end
+    pane = pane or self.panesData['default']
+    love.graphics.setColor(self.printColor)
+    love.graphics.setFont(self.printFont)
+    local draw_x, draw_y = pane.x or 10, pane.y or 0
+    local title_text = self.text
+    love.graphics.print(title_text, draw_x, draw_y)
+    love.graphics.rectangle("line", draw_x, draw_y - 1,
+    self.printFont:getWidth(title_text),
+    self.printFont:getHeight() + 2
+    )
+    draw_y = draw_y + self.printFont:getHeight()
+    -- draw_y = draw_y + 2
+    for i, result in pairs(self.results) do
+        if self.panes[i] == pane.id then
+            if type(result) ~= 'table' then
+                if type(result) == 'string' and result == '' then
+                    result = 'nil'
+                elseif type(result) == 'boolean' then
+                    result = tostring(result)
+                elseif (type(result) == 'userdata') or (type(result) == 'function') then
+                    result = type(result)
+                end
+                love.graphics.printf(self.names[i] .. " : " .. result,
+                    draw_x, draw_y,
+                    pane.w, "left", self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
+            else
+                love.graphics.printf(self.names[i] .. " : Table:",
+                    draw_x, draw_y,
+                    pane.w, "left", self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
+                draw_y = draw_y + self.printFont:getHeight()
+                for i, v in pairs(result) do
+                    if type(v) == 'table' then
+                        love.graphics.printf("\t" .. i .. " : " .. "Table:",
+                            draw_x, draw_y,
+                            pane.w, "left", self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
+                        for i, v in pairs(v) do
+                            if type(v) == "table" then
+                                v = "table"
+                            elseif type(v) == 'boolean' then
+                                v = tostring(v)
+                            elseif type(v) == 'string' and v == '' then
+                                v = 'nil'
+                            elseif (type(v) == 'userdata') or (type(v) == 'function') then
+                                v = type(v)
+                            end
+                            draw_y = draw_y + self.printFont:getHeight()
+                            love.graphics.printf("\t\t" .. i .. " : " .. v,
+                                draw_x, draw_y,
+                                pane.w, "left", self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
+                        end
+                    else
+                        if type(v) == 'string' and v == '' then
+                            v = 'nil'
+                        elseif type(v) == 'boolean' then
+                            v = tostring(v)
+                        elseif (type(v) == 'userdata') or (type(v) == 'function') then
+                            v = type(v)
+                        end
+                        love.graphics.printf("\t" .. i .. " : " .. v,
+                            draw_x, draw_y,
+                            pane.w, "left", self.r, self.sx, self.sy, self.ox, self.oy, self.kx, self.ky)
+                    end
+                    draw_y = draw_y + self.printFont:getHeight()
+                end
+            end
+            draw_y = draw_y + self.printFont:getHeight()
+        end
+    end
 end
 
 return Debugger
