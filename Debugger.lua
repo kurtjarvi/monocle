@@ -256,8 +256,7 @@ function Debugger:display(pane)
     self.printFont:getWidth(title_text),
     self.printFont:getHeight() + 2
     )
-    draw_y = draw_y + self.printFont:getHeight()
-    -- draw_y = draw_y + 2
+    draw_y = draw_y + self.printFont:getHeight() * 2
     for i, result in pairs(self.results) do
         if self.panes[i] == pane.id then
             if type(result) ~= 'table' then
