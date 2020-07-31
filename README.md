@@ -31,7 +31,7 @@ end
 Easy as that! When the game is run, what you're watching will show up in the top right of the screen.
 
 For more information on how to use the old Monocle, as well as the official Love2D forum post, look [here](http://love2d.org/forums/viewtopic.php?f=5&t=77108).
-<br>
+<p></p>
 Oh, you can watch string, number and table variables. so if you have a variable player.health that you really want to watch,
 ```lua
 monocle:watch("Health", function() return player.health end)
