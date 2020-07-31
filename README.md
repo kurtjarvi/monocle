@@ -31,7 +31,7 @@ end
 Easy as that! When the game is run, what you're watching will show up in the top right of the screen.
 
 For more information on how to use the old Monocle, as well as the official Love2D forum post, look [here](http://love2d.org/forums/viewtopic.php?f=5&t=77108).
-
+<br>
 Oh, you can watch string, number and table variables. so if you have a variable player.health that you really want to watch,
 ```lua
 monocle:watch("Health", function() return player.health end)
@@ -54,3 +54,35 @@ is fine.
 	x, y, r, sx, sy, ox, oy, kx, ky
 }
 ```
+
+
+You can now display debug on different parts of the screen with only one debugger object.
+```lua
+monocle:addPane(id, x, y, w, h)
+```
+
+* id - The index of the pane to add ("string")
+* x - The x position of the pane
+* y - The y position of the pane
+* w - The width of the pane
+* h - The height of the pane
+
+By default there is already a pane with the index "default" which would be added with this:
+```lua
+monocle:addPane{
+        id = "default",
+        x = self.x,
+        y = self.y,
+        w = WINDOW_WIDTH - self.x * 2,
+        h = WINDOW_HEIGHT - self.y * 2
+}
+```
+
+where `WINDOW_WIDTH, WINDOW_HEIGHT = love.window.getDesktopDimensions()`
+
+```lua
+monocle:drawPanes(mode)
+```
+* mode - Drawing mode - "line" or "fill"
+
+Drawing the panes
