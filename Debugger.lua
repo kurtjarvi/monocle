@@ -49,6 +49,21 @@ function Debugger:init(params)
 	self.print('Debugger Initialized.')
 end
 
+function Debugger:clearAll()
+    self.names = {}
+	self.listeners = {}
+    self.results = {}
+    self.panes = {}
+    self.panesData = {}
+    self:addPane{
+        id = "default",
+        x = self.x,
+        y = self.y,
+        w = love.graphics.getWidth() - self.x * 2,
+        h = love.graphics.getHeight() - self.y * 2
+    }
+end
+
 function Debugger:cleanupPanes()
     local li = 1
     local r = {}
