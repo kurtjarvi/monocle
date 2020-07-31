@@ -1,31 +1,29 @@
 Debugger = require("30log")("Debugger")
 
-WINDOW_WIDTH, WINDOW_HEIGHT = love.window.getDesktopDimensions()
-
 function Debugger:init(params)
-	self.active = params.isActive or false
+    self.active = params.isActive or false
 	self.names = {}
 	self.listeners = {}
     self.results = {}
     self.panes = {}
     self.panesData = {}
     
-	self.x = params.x
-	self.y = params.y
-	self.r = params.r
-	self.sx = params.sx
-	self.sy = params.sy
-	self.ox = params.ox
-	self.oy = params.oy
-	self.kx = params.kx
-    self.ky = params.ky
+	self.x = params.x or 0
+	self.y = params.y or 0
+	self.r = params.r or 0
+	self.sx = params.sx or 1
+	self.sy = params.sy or 1
+	self.ox = params.ox or 0
+	self.oy = params.oy or 0
+	self.kx = params.kx or 0
+    self.ky = params.ky or 0
 
     self:addPane{
         id = "default",
         x = self.x,
         y = self.y,
-        w = WINDOW_WIDTH - self.x * 2,
-        h = WINDOW_HEIGHT - self.y * 2
+        w = love.graphics.getWidth() - self.x * 2,
+        h = love.graphics.getHeight() - self.y * 2
     }
     
     self.printqueue = {}
@@ -115,12 +113,12 @@ function Debugger:drawPanes(mode)
         local textW = love.graphics.getFont():getWidth(text)
         local textH = love.graphics.getFont():getHeight()
         local textX, textY
-        if x < WINDOW_WIDTH / 2 then
+        if x < love.graphics.getWidth() / 2 then
             textX = x
         else
             textX = (x + w) - textW
         end
-        if y < WINDOW_HEIGHT / 2 then
+        if y < love.graphics.getHeight() / 2 then
             textY = y
         else
             textY = (y + h) - textH
@@ -184,6 +182,10 @@ function Debugger:setFactors(x, y, r, sx, sy, ox, oy, kx, ky)
     self.ky = x, y, r, sx, sy, ox, oy, kx, ky
 end
 
+function Debugger:enabled()
+    return self.active
+end
+
 function Debugger:enable()
 	self.active = true
 end
@@ -191,6 +193,10 @@ end
 function Debugger:disable()
 	self.active = false
 end
+
+Debugger.activate = Debugger.enable
+Debugger.deactivate = Debugger.disable
+Debugger.activated = Debugger.enabled
 
 function Debugger:toggle()
 	self.active = not self.active
@@ -234,13 +240,14 @@ local function any(t, k)
 end
 
 function Debugger:render()
-    self:drawPanes("fill")
     if self.active then
         for _, pane in ipairs(self.panes) do
                 self:display(pane)
         end
     end
 end
+
+Debugger.draw = Debugger.render
 
 function Debugger:display(pane)
     if type(pane) == 'string' then
