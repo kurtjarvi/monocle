@@ -83,15 +83,18 @@ monocle:drawPanes(mode)
 
 ```lua
 require 'Debugger'
-monocle = Debugger{
-	x = 20,
-	y = 40
-}
 
 function love.load()
+	monocle = Debugger{
+		x = 20,
+		y = 40,
+		printColor={0, 0, 0, 1}
+	}
+
 	-- The most basic way to watch any expression or variable:
 	monocle:watch("FPS", function() return love.timer.getFPS() end)
 	monocle:activate()
+
 	love.graphics.setBackgroundColor(1, 0.8, 0)
 end
 
@@ -101,11 +104,11 @@ end
 
 function love.draw()
 	monocle:drawPanes("fill")
-	monocle:draw()
+	monocle:render()
 end
 
-function love.keypressed(key)
-	monocle:keypressed(key)
+function love.keypressed(text)
+	monocle:keypressed(text)
 end
 ```
 The above code would look like this:
