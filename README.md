@@ -116,4 +116,4 @@ function love.keypressed(text)
 end
 ```
 The above code would look like this:
-![Panes drawn with gold background]()
+![Panes drawn with gold background](/Annotation 2020-07-31 135931.png)
