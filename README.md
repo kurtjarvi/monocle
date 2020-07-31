@@ -93,7 +93,6 @@ function love.load()
 
 	-- The most basic way to watch any expression or variable:
 	monocle:watch("FPS", function() return love.timer.getFPS() end)
-	monocle:activate()
 
 	love.graphics.setBackgroundColor(1, 0.8, 0)
 end
@@ -112,4 +111,7 @@ function love.keypressed(text)
 end
 ```
 The above code would look like this:
-![Panes drawn with gold background](/panes_drawn.png)
+![Panes drawn with gold background](/images/panes_drawn.png)
+
+And removing the `monocle:drawPanes("fill")` and adding `monocle:activate()` would show:
+![Debug mode activated](/images/debug_activated.png)
