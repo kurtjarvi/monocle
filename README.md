@@ -67,15 +67,6 @@ monocle:addPane(id, x, y, w, h)
 * w - The width of the pane
 * h - The height of the pane
 
-
-
-
-
-
-
-
-
-
 By default there is already a pane with the index "default" which would be added with this:
 ```lua
 monocle:addPane{
@@ -87,11 +78,42 @@ monocle:addPane{
 }
 ```
 
-where `WINDOW_WIDTH, WINDOW_HEIGHT = love.window.getDesktopDimensions()`
+where `WINDOW_WIDTH, WINDOW_HEIGHT = love.graphics.getWidth(), love.graphics.getHeight()`
 
 ```lua
 monocle:drawPanes(mode)
 ```
 * mode - Drawing mode - "line" or "fill"
 
-Drawing the panes
+```lua
+require 'Debugger'
+monocle = Debugger{
+	x = 20,
+	y = 40
+}
+
+function love.load()
+	-- The most basic way to watch any expression or variable:
+	monocle:watch("FPS", function() return love.timer.getFPS() end)
+	love.graphics.setBackgroundColor(1, 0.8, 0)
+end
+
+function love.update(dt)
+	monocle:update(dt)
+end
+
+function love.draw()
+	monocle:drawPanes("fill")
+	monocle:render()
+end
+
+function love.textinput(t)
+	monocle:textinput(t)
+end
+
+function love.keypressed(text)
+	monocle:keypressed(text)
+end
+```
+The above code would look like this:
+![Panes drawn with gold background]()
