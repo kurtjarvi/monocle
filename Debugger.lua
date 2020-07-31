@@ -1,5 +1,7 @@
 Debugger = require("30log")("Debugger")
 
+WINDOW_WIDTH, WINDOW_HEIGHT = love.window.getDesktopDimensions()
+
 function Debugger:init(params)
 	self.active = params.isActive or false
 	self.names = {}
@@ -17,16 +19,14 @@ function Debugger:init(params)
 	self.oy = params.oy
 	self.kx = params.kx
     self.ky = params.ky
-    
-    local defaultPaneData = {
+
+    self:addPane{
         id = "default",
         x = self.x,
         y = self.y,
         w = WINDOW_WIDTH - self.x * 2,
         h = WINDOW_HEIGHT - self.y * 2
-    }    
-    table.insert(self.panesData, defaultPaneData)
-    self.panesData['default'] = defaultPaneData
+    }
     
     self.printqueue = {}
     
@@ -93,8 +93,16 @@ function Debugger:addPane(id, x, y, w, h)
         w = w,
         h = h
     }
+    if type(id) == 'table' and not(x and y and w and h) then
+        data = id
+    end
+    data.id = data.id or data.index or data[1]
+    data.x = data.x or data[2]
+    data.y = data.y or data[3]
+    data.w = data.w or data.width or data[4]
+    data.h = data.h or data.height or data[5]
     table.insert(self.panesData, data)
-    self.panesData[id] = data
+    self.panesData[data.id] = data
 end
 
 function Debugger:drawPanes(mode)
